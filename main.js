@@ -2,6 +2,7 @@ var request = require('request');
 var fs = require('fs');
 var cheerio = require('cheerio');
 var ASQ = require('asynquence');
+var moment = require('moment');
 
 var getHTML = function(done, url) {
     request(url, done);
@@ -56,10 +57,27 @@ var getPreviousRepoCount = function(done, searchURL, previousStatsFilename) {
     .pipe(done);
 };
 
+var compareRepoStats = function(done, currentStats, previousStats, searchURL) {
+    var diff = currentStats.count - previousStats.count;
+    var date = moment(previousStats.timestamp).format('MMM Do, YYYY');
+    var comparison = 'Up ' + diff;
+
+    if (diff === 0) {
+        comparison = 'No change'
+    } else if (diff < 0) {
+        comparison = 'Down ' + diff;
+    }
+    
+    console.log(currentStats.formattedCount, 'repos', '(' + comparison, 'since', date + ').', searchURL);
+    done();
+};
+
 var app = function(searchURL, previousStatsFilename) {
     ASQ(searchURL, previousStatsFilename)
     .gate(getCurrentRepoCount, getPreviousRepoCount)
-    .then(console.log)
+    .then(function(done, currentStats, previousStats) {
+        compareRepoStats(done, currentStats, previousStats, searchURL)
+    })
 
     .or(function(err) {
         console.log(err);
@@ -67,5 +85,3 @@ var app = function(searchURL, previousStatsFilename) {
 };
 
 app('http://github.com/search?o=desc&q=beautiful&s=updated&type=Repositories', './previous.json');
-
-
