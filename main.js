@@ -57,7 +57,7 @@ var getPreviousRepoCount = function(done, searchURL, previousStatsFilename) {
     .pipe(done);
 };
 
-var compareRepoStats = function(done, currentStats, previousStats, searchURL) {
+var compareRepoStats = function(done, currentStats, previousStats, searchURL, T) {
     var diff = currentStats.count - previousStats.count;
     var date = moment(previousStats.timestamp).format('MMM Do, YYYY');
     var comparison = 'Up ' + diff;
@@ -67,16 +67,28 @@ var compareRepoStats = function(done, currentStats, previousStats, searchURL) {
     } else if (diff < 0) {
         comparison = 'Down ' + diff;
     }
-    
-    console.log(currentStats.formattedCount, 'repos', '(' + comparison, 'since', date + ').', searchURL);
+
+    /*
+    var tweet = [currentStats.formattedCount, 'repos', '(' + comparison, 'since', date + ').', searchURL].join(' ');
+
+    T.post('statuses/update', { status: tweet }, function(err, data, response) {
+        console.log(err);
+        console.log(data);
+        console.log(response);
+    });
+   */
+
     done();
 };
 
 var app = function(searchURL, previousStatsFilename) {
+    var Twit = require('twit')
+    var T = new Twit(require('./twitter.json'));
+
     ASQ(searchURL, previousStatsFilename)
     .gate(getCurrentRepoCount, getPreviousRepoCount)
     .then(function(done, currentStats, previousStats) {
-        compareRepoStats(done, currentStats, previousStats, searchURL)
+        compareRepoStats(done, currentStats, previousStats, searchURL, T)
     })
 
     .or(function(err) {

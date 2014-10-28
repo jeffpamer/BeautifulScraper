@@ -12,6 +12,7 @@
     "asynquence": "^0.5.4-a",
     "cheerio": "^0.17.0",
     "moment": "^2.8.3",
-    "request": "^2.46.0"
+    "request": "^2.46.0",
+    "twit": "^1.1.18"
   }
 }
