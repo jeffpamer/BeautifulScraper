@@ -32,13 +32,13 @@ var findRepoStats = function(done, $) {
 }
 
 var getCurrentRepoCount = function(done, searchURL) {
+    console.log('Pulling stats ...');
 
     ASQ(searchURL)
     .then(getHTML)
     .then(parseHTML)
     .then(findRepoStats)
     .pipe(done);
-
 };
 
 var loadJSON = function(done, filename) {
@@ -68,12 +68,14 @@ var compareRepoStats = function(done, currentStats, previousStats, searchURL, T)
         comparison = '-' + diff;
     }
 
-    var tweet = [currentStats.formattedCount, 'repos', '(' + comparison, 'since', date + ').', searchURL].join(' ');
-    done(tweet, currentStats);
+    var summary = [currentStats.formattedCount, 'repos', '(' + comparison, 'since', date + ').', searchURL].join(' ');
+    done(summary, currentStats);
 };
 
 var tweetRepoStats = function(done, tweet, currentStats, T) {
-    T.post('statuses/update', { status: stats }, function(err, data, response) {
+    console.log('Tweeting ...');
+
+    T.post('statuses/update', { status: tweet }, function(err, data, response) {
         if (!err) {
             done(currentStats)
         } else {
@@ -83,6 +85,8 @@ var tweetRepoStats = function(done, tweet, currentStats, T) {
 };
 
 var writeStats = function(done, stats, filename) {
+    console.log('Archiving ...');
+
     fs.writeFile(filename, JSON.stringify(stats), function(err) {
         if (err) {
             done.fail(err);
@@ -107,9 +111,12 @@ var app = function(searchURL, previousStatsFilename) {
     .then(function(done, currentStats) {
         writeStats(done, currentStats, previousStatsFilename);
     })
+    .then(function(done) {
+        console.log('Done.');
+    })
 
     .or(function(err) {
-        console.log(err);
+        console.log('***', err);
     });
 };
 
