@@ -18,7 +18,7 @@ var parseHTML = function(done, error, response, html) {
 };
 
 var findRepoStats = function(done, $) {
-    var repoCounter = $('ul.menu span.counter').eq(0);
+    var repoCounter = $('nav.menu span.counter').eq(0);
     var repoCount = repoCounter.text();
     var unformattedRepoCount = parseInt(repoCount.replace(',', ''));
 
@@ -26,10 +26,14 @@ var findRepoStats = function(done, $) {
         count: unformattedRepoCount,
         formattedCount: repoCount,
         timestamp: Date.now()
-    };
-
-    done(repoStats);
-}
+    }
+    
+    if (repoCount) {
+        done(repoStats);
+    } else {
+        done.fail('Repo counts not found!');
+    }
+};
 
 var getCurrentRepoCount = function(done, searchURL) {
     console.log('Pulling stats ...');
