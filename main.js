@@ -72,12 +72,15 @@ var compareRepoStats = function(done, currentStats, previousStats, searchURL, T)
         comparison = '-' + diff;
     }
 
-    var summary = [currentStats.formattedCount, 'repos', '(' + comparison, 'since', date + ').', searchURL].join(' ');
+    var summary = [currentStats.formattedCount, 'repos', '(' + comparison, 'since', date + ').', searchURL, '#BeautifulRepos', '#Blessed'].join(' ');
     done(summary, currentStats);
 };
 
-var tweetRepoStats = function(done, tweet, currentStats, T) {
+var tweetRepoStats = function(done, tweet, currentStats) {
     console.log('Tweeting ...');
+
+    var Twit = require('twit');
+    var T = new Twit(require('./twitter.json'));
 
     T.post('statuses/update', { status: tweet }, function(err, data, response) {
         if (!err) {
@@ -101,17 +104,13 @@ var writeStats = function(done, stats, filename) {
 };
 
 var app = function(searchURL, previousStatsFilename) {
-    var Twit = require('twit');
-    var T = new Twit(require('./twitter.json'));
 
     ASQ(searchURL, previousStatsFilename)
     .gate(getCurrentRepoCount, getPreviousRepoCount)
     .then(function(done, currentStats, previousStats) {
         compareRepoStats(done, currentStats, previousStats, searchURL);
     })
-    .then(function(done, tweet, currentStats) {
-        tweetRepoStats(done, tweet, currentStats, T);
-    })
+    .then(tweetRepoStats)
     .then(function(done, currentStats) {
         writeStats(done, currentStats, previousStatsFilename);
     })
@@ -122,6 +121,7 @@ var app = function(searchURL, previousStatsFilename) {
     .or(function(err) {
         console.log('***', err);
     });
+
 };
 
 app('http://github.com/search?o=desc&q=beautiful&s=updated&type=Repositories', './previous.json');
